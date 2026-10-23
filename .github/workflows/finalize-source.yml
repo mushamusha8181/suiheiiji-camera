@@ -1,0 +1,105 @@
+name: Finalize exact source
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.repair_chunks/**'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore exact v1.7.0 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(find .repair_chunks -maxdepth 1 -name '[0-9][0-9][0-9].b64' 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$count" -lt 9 ]; then
+            echo "Waiting for repair chunks: $count/9"
+            exit 0
+          fi
+
+          cat $(find .repair_chunks -maxdepth 1 -name '[0-9][0-9][0-9].b64' | sort) | base64 -d > /tmp/hkc_repair.tar.xz
+          echo '20c11ea28d04ef25514381a81c0925d3d0cd4663074c637d2ee1e3d94edc34bf  /tmp/hkc_repair.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/hkc_repair.tar.xz
+
+          rm -rf .source_chunks .repair_chunks
+          rm -f .github/workflows/restore-source.yml .github/workflows/finalize-source.yml
+
+          cat > /tmp/expected.sha256 <<'EOF'
+          2e9a47f9aab6b014a713c23b5de2a1a8d0e508bfff64eadf59c92efa42a8e4e8  ./.github/workflows/android.yml
+          9d0c62b809cf774b889dd315c3197a82950013bf105360f012746240149e4f89  ./.gitignore
+          baf6064908f54d7372a6d8304f5714c8df2340ceb546fe1ce1202213861d6f5b  ./CODE_HEALTH_AUDIT.md
+          f29223d803a49ddf1a4a057b6240f5deb96d250f3c49b2a5ac8f9cf30a7c330c  ./README.md
+          a2076a5ff63c834c4c5179b17642a1e01f643a41668251ef6f1cbe908126acec  ./app/build.gradle
+          dac2b6d9e7d64bd3cfb8748e46ef7bc7d517b14131a22aa10afdd8dc6397827e  ./app/src/main/AndroidManifest.xml
+          9fe90a8160407e1ca5507e11c073242e55fbf291a0685674439818e9129b3d14  ./app/src/main/assets/luts/cinema.cube
+          6b708561527f2ab73872cf84248e7a3b15511c9df8beaedd2bb8ab3742a696b5  ./app/src/main/assets/luts/cool.cube
+          c72906d426d590ba5b811068a2ec1643df15f80f2d3abcc29ed74a55800e2794  ./app/src/main/assets/luts/mono.cube
+          de850d1ffd45cf491d047579494db602166e76598481e76c8cd49b726f792680  ./app/src/main/assets/luts/natural.cube
+          3309ebf6232ed01fb219e0ae1284ae3fc7280e0558ffff23ec5e7941fe54d014  ./app/src/main/assets/luts/warm.cube
+          1d7d7b0f8e8b9d8a544b13301c23a818c055f229eb9483bd4e28344bde65ac3d  ./app/src/main/java/jp/mushamusha/horizontalcamera/AudioEncoder.java
+          83fe2e8a50001905223100b576d6ce5d4b7e41deed89defba8e8186d3a31c1bd  ./app/src/main/java/jp/mushamusha/horizontalcamera/CameraController.java
+          ee282342b33461c55f3081163e3b78c046a61371f96f16300ea877996e176bfa  ./app/src/main/java/jp/mushamusha/horizontalcamera/CameraGLRenderer.java
+          dd64913a8c6f5f05f882641a071ae2f983fd20e598f3b4796ce25f218b95e02e  ./app/src/main/java/jp/mushamusha/horizontalcamera/CameraOverlayView.java
+          e239d6cbac468ef231cfc201a9998ff97a5ce15eb4c0529d99a59173809057c3  ./app/src/main/java/jp/mushamusha/horizontalcamera/CodecUtil.java
+          e831fc8bf07918efc13216e33d99538e4c749f8c19397ccf526a892c83135225  ./app/src/main/java/jp/mushamusha/horizontalcamera/CubeLut.java
+          eaf732b84139b1a0274710148433d92fd401f03458b524648d4535afb34d2848  ./app/src/main/java/jp/mushamusha/horizontalcamera/HorizonSensor.java
+          36031137ac99edd0a7dcff5636cf530fa208c86e8520b3761cf6aa4821de4311  ./app/src/main/java/jp/mushamusha/horizontalcamera/MainActivity.java
+          7390e9637df0d7525b3771a1b423ea082060bd2b6658be2f9d3465fa74afe988  ./app/src/main/java/jp/mushamusha/horizontalcamera/MuxerController.java
+          1c0fe652e42423dbe488bade52b641e32c3a4983033b8ecc304deb00cf0e414f  ./app/src/main/java/jp/mushamusha/horizontalcamera/VideoEncoder.java
+          1b63efa7e1ed73920c3dc29e1f6297470cc8512270f64aaeac96b114844b86ad  ./app/src/main/res/drawable/ic_launcher.xml
+          bb5bb23104c1037aebbbc6201e454de57c1d07f80824ea1413e59e93dec3ce50  ./app/src/main/res/values/strings.xml
+          e6f2b8fbaaa1966a618d1d2300a59ed2ab6daa929f26f7093a1a4932e8438a50  ./app/src/main/res/values/themes.xml
+          c3c0cf04da0fc239f391c774554d97d890018ab6e37e87cc62f6070d0c8c9909  ./build.gradle
+          cc38bc495ca4e4d7fa2fe7c9c1112f36af7a63fbf4fc3e7a088e215942403385  ./gradle.properties
+          9ea561a0f8170a6b2da3e7ffb47b737ffc93356c114d94e63e096e9bedf0471b  ./settings.gradle
+          EOF
+          sed -i 's/^          //' /tmp/expected.sha256
+          sha256sum -c /tmp/expected.sha256
+
+          cat > /tmp/expected-files <<'EOF'
+          .github/workflows/android.yml
+          .gitignore
+          CODE_HEALTH_AUDIT.md
+          README.md
+          app/build.gradle
+          app/src/main/AndroidManifest.xml
+          app/src/main/assets/luts/cinema.cube
+          app/src/main/assets/luts/cool.cube
+          app/src/main/assets/luts/mono.cube
+          app/src/main/assets/luts/natural.cube
+          app/src/main/assets/luts/warm.cube
+          app/src/main/java/jp/mushamusha/horizontalcamera/AudioEncoder.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/CameraController.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/CameraGLRenderer.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/CameraOverlayView.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/CodecUtil.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/CubeLut.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/HorizonSensor.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/MainActivity.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/MuxerController.java
+          app/src/main/java/jp/mushamusha/horizontalcamera/VideoEncoder.java
+          app/src/main/res/drawable/ic_launcher.xml
+          app/src/main/res/values/strings.xml
+          app/src/main/res/values/themes.xml
+          build.gradle
+          gradle.properties
+          settings.gradle
+          EOF
+          sed -i 's/^          //' /tmp/expected-files
+          find . -type f ! -path './.git/*' -printf '%P\n' | sort > /tmp/actual-files
+          diff -u <(sort /tmp/expected-files) /tmp/actual-files
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Import 水平維持カメラ v1.7.0 exact source'
+          git push origin HEAD:main
