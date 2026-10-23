@@ -21,8 +21,8 @@ jobs:
         run: |
           set -euo pipefail
           count=$(find .source_chunks -maxdepth 1 -name '*.b64' | wc -l | tr -d ' ')
-          if [ "$count" -lt 21 ]; then
-            echo "Waiting for all source chunks: $count/21"
+          if [ "$count" -lt 19 ]; then
+            echo "Waiting for all source chunks: $count/19"
             exit 0
           fi
           cat $(find .source_chunks -maxdepth 1 -name '*.b64' | sort) | base64 -d > /tmp/source.zip
