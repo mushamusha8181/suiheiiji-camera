@@ -91,7 +91,7 @@ public final class CubeLut {
         try {
             return new float[]{Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3])};
         } catch (NumberFormatException e) {
-            throw new IOException("LUT row is invalid at line " + lineNo, e);
+            throw new IOException(key + " is invalid at line " + lineNo, e);
         }
     }
 
