@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
+    paths-ignore:
+      - '.source_chunks/**'
+      - '.github/workflows/restore-source.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
