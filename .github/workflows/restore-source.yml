@@ -20,12 +20,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          count=$(find .source_chunks -maxdepth 1 -name '*.b64' | wc -l | tr -d ' ')
+          count=$(find .source_chunks -maxdepth 1 -name '[0-9][0-9][0-9].b64' | wc -l | tr -d ' ')
           if [ "$count" -lt 19 ]; then
             echo "Waiting for all source chunks: $count/19"
             exit 0
           fi
-          cat $(find .source_chunks -maxdepth 1 -name '*.b64' | sort) | base64 -d > /tmp/source.zip
+          cat $(find .source_chunks -maxdepth 1 -name '[0-9][0-9][0-9].b64' | sort) | base64 -d > /tmp/source.zip
           echo '7ee0a2663b905ceee98d570b7c841a4662804bbdad301ef407291947e6fa5e62  /tmp/source.zip' | sha256sum -c -
           rm -rf /tmp/source && mkdir -p /tmp/source
           unzip -q /tmp/source.zip -d /tmp/source
