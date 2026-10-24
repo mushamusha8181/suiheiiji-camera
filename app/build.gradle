@@ -19,3 +19,5 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+apply from: 'https://raw.githubusercontent.com/mushamusha8181/light/main/design-system/mushin-glass.gradle'
