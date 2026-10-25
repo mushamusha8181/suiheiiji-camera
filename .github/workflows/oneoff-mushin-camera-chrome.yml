@@ -1,0 +1,45 @@
+name: One-off MUSHIN horizontal camera UI
+
+on:
+  push:
+    paths:
+      - 'MUSHIN_CAMERA_CHROME_TRIGGER'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch camera controls
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/java/jp/mushamusha/horizontalcamera/MainActivity.java')
+          s=p.read_text()
+          anchor='import java.util.concurrent.atomic.AtomicReference;\n'
+          if 'import jp.mushamusha.mushinglass.MushinGlass;' not in s:
+              if anchor not in s: raise SystemExit('import anchor missing')
+              s=s.replace(anchor,anchor+'\nimport jp.mushamusha.mushinglass.MushinGlass;\n',1)
+          anchor='''        FrameLayout root = new FrameLayout(this);\n        root.setBackgroundColor(Color.BLACK);'''
+          if anchor not in s: raise SystemExit('root anchor missing')
+          s=s.replace(anchor,'''        FrameLayout root = new FrameLayout(this);\n        root.setBackgroundColor(Color.BLACK);\n        MushinGlass.Config appearance = MushinGlass.config(this);''',1)
+          for old,new in [
+              ('topBar.setBackgroundColor(0x55000000);','topBar.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(44, appearance.glassOpacity - 14), 14));'),
+              ('statusText.setBackgroundColor(0x55000000);','statusText.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(42, appearance.glassOpacity - 18), 10));'),
+              ('bottomBar.setBackgroundColor(0x66000000);','bottomBar.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(44, appearance.glassOpacity - 14), 14));')]:
+              if old not in s: raise SystemExit('background anchor missing: '+old)
+              s=s.replace(old,new,1)
+          anchor='''        recordButton = new Button(this);\n        recordButton.setText("●");'''
+          if anchor not in s: raise SystemExit('record button anchor missing')
+          s=s.replace(anchor,'''        recordButton = new Button(this);\n        recordButton.setTag("keep_text_color keep_mushin_shape");\n        recordButton.setText("●");''',1)
+          p.write_text(s)
+          PY
+          rm -f MUSHIN_CAMERA_CHROME_TRIGGER .github/workflows/oneoff-mushin-camera-chrome.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Apply MUSHIN Glass to horizontal camera chrome'
+          git push
