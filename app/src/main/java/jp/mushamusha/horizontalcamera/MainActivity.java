@@ -50,6 +50,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jp.mushamusha.mushinglass.MushinGlass;
+
 public final class MainActivity extends Activity implements
         CameraGLRenderer.Listener, CameraController.Listener, HorizonSensor.Listener, AudioEncoder.Listener {
 
@@ -213,6 +215,7 @@ public final class MainActivity extends Activity implements
     private void buildUi() {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
+        MushinGlass.Config appearance = MushinGlass.config(this);
 
         glView = new GLSurfaceView(this);
         glView.setEGLContextClientVersion(3);
@@ -229,7 +232,7 @@ public final class MainActivity extends Activity implements
         topBar.setOrientation(LinearLayout.HORIZONTAL);
         topBar.setGravity(Gravity.CENTER);
         topBar.setPadding(dp(4), dp(4), dp(4), dp(4));
-        topBar.setBackgroundColor(0x55000000);
+        topBar.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(44, appearance.glassOpacity - 14), 14));
         orientationButton = chip(portrait ? "縦 9:16" : "横 16:9");
         stabButton = chip("水平 45°");
         fpsButton = chip("30 FPS");
@@ -250,7 +253,7 @@ public final class MainActivity extends Activity implements
         statusText.setSingleLine(true);
         statusText.setEllipsize(android.text.TextUtils.TruncateAt.END);
         statusText.setPadding(dp(4), 0, dp(4), 0);
-        statusText.setBackgroundColor(0x55000000);
+        statusText.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(42, appearance.glassOpacity - 18), 10));
         statusText.setText("準備中…");
         FrameLayout.LayoutParams sp = new FrameLayout.LayoutParams(-1, uiStatusHeight(), Gravity.TOP);
         sp.topMargin = uiTopBarHeight();
@@ -260,10 +263,11 @@ public final class MainActivity extends Activity implements
         bottomBar.setOrientation(LinearLayout.HORIZONTAL);
         bottomBar.setGravity(Gravity.CENTER);
         bottomBar.setPadding(dp(6), dp(4), dp(6), dp(6));
-        bottomBar.setBackgroundColor(0x66000000);
+        bottomBar.setBackground(MushinGlass.glassDrawable(this, Color.WHITE, Math.max(44, appearance.glassOpacity - 14), 14));
         switchCameraButton = chip("反転");
         torchButton = chip("ライトOFF");
         recordButton = new Button(this);
+        recordButton.setTag("keep_text_color keep_mushin_shape");
         recordButton.setText("●");
         recordButton.setTextSize(26f);
         recordButton.setMinWidth(0);
