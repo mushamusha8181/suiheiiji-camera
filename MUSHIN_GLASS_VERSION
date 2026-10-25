@@ -1,6 +1,9 @@
-2026-10-25.1
+2026-10-25.2
 Default palette: green_light #7FA98C
 Default text: black #000000
 Default icon: teal_gray #436E6A
 Default glass opacity: 72
 Launcher alias target detection: fixed
+Dynamic View styling: runtime-v3, bounded reapply + explicit applyToView
+Compose styling: shared MushinGlassTheme required
+Semantic UI exceptions: keep_text_color / keep_mushin_shape
